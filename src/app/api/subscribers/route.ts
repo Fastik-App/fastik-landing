@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { WAITLIST_SUBJECT, waitlistWelcomeHtml } from "@/lib/waitlist-email";
 import { unsubscribeUrl } from "@/lib/unsubscribe-token";
+import { checkSignupRate, clientIp } from "@/lib/rate-limit";
 
 /**
  * Waitlist signup.
@@ -43,6 +44,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: GENERIC_ERROR }, { status: 503 });
   }
 
+  // Before anything that costs money. Every send draws on a 3,000/month
+  // quota, so the endpoint cannot stay open to a loop.
+  const rate = checkSignupRate(clientIp(request));
+  if (!rate.ok) {
+    return NextResponse.json(
+      { message: "Too many signups from this connection. Try again shortly." },
+      { status: 429, headers: { "Retry-After": String(rate.retryAfter) } },
+    );
+  }
+
   let email: string;
   try {
     const body = (await request.json()) as { email?: unknown };
@@ -57,25 +68,57 @@ export async function POST(request: Request) {
 
   const resend = new Resend(apiKey);
 
+  // Resend reports a repeat create as success without saying the contact
+  // already existed, so re-submitting the form would send a second welcome
+  // email. Look first: someone already subscribed gets the same reassuring
+  // response and no duplicate mail.
+  let alreadySubscribed = false;
+  let wasUnsubscribed = false;
   try {
-    const { error } = await resend.contacts.create({
-      email,
-      unsubscribed: false,
-      ...(segmentId ? { segments: [{ id: segmentId }] } : {}),
-      ...(topicId ? { topics: [{ id: topicId, subscription: "opt_in" as const }] } : {}),
-    });
+    const { data } = await resend.contacts.get({ email });
+    if (data) {
+      alreadySubscribed = true;
+      // They opted out at some point and are now filling the form again.
+      // That submission is a fresh request to be on the list, so honour it
+      // and send the welcome mail — but flip the flag first, or the topic
+      // gate below will refuse the send.
+      wasUnsubscribed = data.unsubscribed === true;
+    }
+  } catch {
+    // Lookup failure is not a reason to turn a visitor away. Fall through and
+    // create; the worst case is the duplicate email this check exists to stop.
+  }
 
-    // Resend treats a repeat signup as success. Someone re-submitting their
-    // address should be reassured, not told they already did it — but they
-    // shouldn't get a second welcome email either, and Resend doesn't tell us
-    // whether the contact was new. Sending again is the lesser annoyance.
-    if (error) {
-      console.error("[subscribers] contacts.create failed", error);
-      return NextResponse.json({ message: GENERIC_ERROR }, { status: 502 });
+  try {
+    if (alreadySubscribed && wasUnsubscribed) {
+      const { error } = await resend.contacts.update({ email, unsubscribed: false });
+      if (error) {
+        console.error("[subscribers] resubscribe failed", error);
+        return NextResponse.json({ message: GENERIC_ERROR }, { status: 502 });
+      }
+    } else if (!alreadySubscribed) {
+      const { error } = await resend.contacts.create({
+        email,
+        unsubscribed: false,
+        ...(segmentId ? { segments: [{ id: segmentId }] } : {}),
+        ...(topicId ? { topics: [{ id: topicId, subscription: "opt_in" as const }] } : {}),
+      });
+
+      if (error) {
+        console.error("[subscribers] contacts.create failed", error);
+        return NextResponse.json({ message: GENERIC_ERROR }, { status: 502 });
+      }
     }
   } catch (err) {
-    console.error("[subscribers] contacts.create threw", err);
+    console.error("[subscribers] contact write threw", err);
     return NextResponse.json({ message: GENERIC_ERROR }, { status: 502 });
+  }
+
+  // Already on the list and still subscribed: nothing to send. The form says
+  // "you're on the list" either way, which is true and is what they wanted
+  // to hear — telling them they already signed up helps nobody.
+  if (alreadySubscribed && !wasUnsubscribed) {
+    return NextResponse.json({ ok: true }, { status: 201 });
   }
 
   // The address is on the list at this point. A failed welcome email is worth
