@@ -24,16 +24,20 @@ const GENERIC_ERROR =
 
 export async function POST(request: Request) {
   const apiKey = process.env.RESEND_API_KEY;
-  const audienceId = process.env.RESEND_AUDIENCE_ID;
+  // Segment groups signups so a launch broadcast can target them; topic
+  // carries the subscription preference that drives the unsubscribe link.
+  // Resend replaced Audiences with these — audienceId is deprecated.
+  const segmentId = process.env.RESEND_SEGMENT_ID;
+  const topicId = process.env.RESEND_TOPIC_ID;
   const from = process.env.WAITLIST_FROM_EMAIL;
   // Where replies land. Kept in env rather than in source because this repo
   // is public and it is a personal inbox.
   const replyTo = process.env.WAITLIST_REPLY_TO;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fastik.io";
 
-  if (!apiKey || !audienceId || !from) {
+  if (!apiKey || !from) {
     // Misconfiguration is ours, not the visitor's — don't blame their input.
-    console.error("[subscribers] missing RESEND_API_KEY / RESEND_AUDIENCE_ID / WAITLIST_FROM_EMAIL");
+    console.error("[subscribers] missing RESEND_API_KEY / WAITLIST_FROM_EMAIL");
     return NextResponse.json({ message: GENERIC_ERROR }, { status: 503 });
   }
 
@@ -54,8 +58,9 @@ export async function POST(request: Request) {
   try {
     const { error } = await resend.contacts.create({
       email,
-      audienceId,
       unsubscribed: false,
+      ...(segmentId ? { segments: [{ id: segmentId }] } : {}),
+      ...(topicId ? { topics: [{ id: topicId, subscription: "opt_in" as const }] } : {}),
     });
 
     // Resend treats a repeat signup as success. Someone re-submitting their
