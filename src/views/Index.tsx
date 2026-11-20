@@ -1,15 +1,14 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { MessageSquare, Users, FolderOpen, Calendar, Kanban, Share2, Video, Camera, Palette, Building2, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, Users, FolderOpen, Calendar, Kanban, Share2, Clock, Video, Camera, Palette, Building2, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { glass, glassHover } from "@/lib/constants";
 import Image from "next/image";
 import { FadeSection } from "@/components/shared/FadeSection";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { DownloadButtons } from "@/components/shared/DownloadButtons";
-import { DownloadSection } from "@/components/shared/DownloadSection";
-import { DeviceTheater } from "@/components/shared/DeviceTheater";
+import { WaitlistCTA } from "@/components/shared/WaitlistCTA";
 
 const roles = [
   { icon: Video, label: 'Videographers' },
@@ -46,6 +45,26 @@ const imaginePoints = [
   'Your team works in one calm space',
   'Every project starts organized from day one',
 ];
+
+function useCountdown(targetDate: Date) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const targetTime = targetDate.getTime();
+  useEffect(() => {
+    const tick = () => {
+      const diff = Math.max(0, targetTime - Date.now());
+      setTimeLeft({
+        days: Math.floor(diff / 86400000),
+        hours: Math.floor((diff % 86400000) / 3600000),
+        minutes: Math.floor((diff % 3600000) / 60000),
+        seconds: Math.floor((diff % 60000) / 1000),
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [targetTime]);
+  return timeLeft;
+}
 
 function ImaginePointItem({ text, index }: { text: string; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -632,19 +651,23 @@ function LazyVisible({ index }: { index: number }) {
 }
 
 export default function Index() {
+  const launchDate = new Date('2026-09-01T00:00:00');
+  const countdown = useCountdown(launchDate);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     setLoaded(true);
   }, []);
 
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    // overflow-x-clip (not -hidden): hidden would make this the scroll container
-    // and silently break position:sticky for the device theater.
-    <div className="min-h-screen bg-[#09090b] text-white overflow-x-clip font-sans selection:bg-primary/30">
+    <div className="min-h-screen bg-[#09090b] text-white overflow-x-hidden font-sans selection:bg-primary/30">
 
       {/* ── NAV ── */}
-      <Navbar activePage="home" ctaTarget="download" />
+      <Navbar activePage="home" ctaTarget="story" />
 
       <main>
       {/* ── HERO ── */}
@@ -671,22 +694,6 @@ export default function Index() {
             fetchPriority="high"
             sizes="(max-width: 640px) 0px, min(100vw, 1400px)"
           />
-        </div>
-
-        {/* Launch badge — proof it's live, on both platforms */}
-        <div
-          className={cn("relative mb-6 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs text-white/70", glass)}
-          style={{
-            opacity: loaded ? 1 : 0,
-            transform: loaded ? 'translateY(0)' : 'translateY(12px)',
-            transition: 'opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1)',
-          }}
-        >
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/70" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
-          </span>
-          Now live on Mac and iPhone
         </div>
 
         <h1
@@ -723,24 +730,54 @@ export default function Index() {
             transition: 'opacity 0.8s cubic-bezier(0.16,1,0.3,1) 0.15s, transform 0.8s cubic-bezier(0.16,1,0.3,1) 0.15s',
           }}
         >
-          Video review, client galleries, a unified inbox, your studio calendar, and live tethered capture. Everything your studio ships, on Mac and iPhone.
+          Fastik is the workspace built for the speed and rhythm of creative work.
         </p>
         <div
-          className="relative flex flex-col items-center gap-4 mt-7"
+          className="relative flex flex-col items-center gap-4 mt-5"
           style={{
             opacity: loaded ? 1 : 0,
             transform: loaded ? 'translateY(0)' : 'translateY(20px)',
             transition: 'opacity 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s, transform 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s',
           }}
         >
-          <DownloadButtons />
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <Button size="lg" onClick={() => scrollTo('story')} className="bg-gradient-to-r from-[#3a118f] to-[#665ed7] hover:from-[#4a1aaf] hover:to-[#7b74e0] text-white rounded-full px-8 gap-2 text-base transition-all duration-300">
+              Join Early Access
+            </Button>
+            <button onClick={() => scrollTo('features')} className="text-sm text-white/60 hover:text-white transition-colors underline underline-offset-4">
+              See how it works
+            </button>
+          </div>
           <p className="text-xs text-white/40 italic font-serif tracking-wide">Built by creatives, for creatives</p>
         </div>
 
+        {/* Dashboard preview */}
+        <div
+          className="relative mt-16 w-full max-w-5xl"
+          style={{
+            opacity: loaded ? 1 : 0,
+            transform: loaded ? 'translateY(0) scale(1)' : 'translateY(50px) scale(0.97)',
+            transition: 'opacity 1s cubic-bezier(0.16,1,0.3,1) 0.5s, transform 1s cubic-bezier(0.16,1,0.3,1) 0.5s',
+          }}
+        >
+          <div className="absolute -inset-10 bg-gradient-to-b from-primary/20 via-primary/10 to-transparent rounded-[2.5rem] blur-[60px] pointer-events-none" />
+          <div className="relative rounded-[2rem] border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm p-4 sm:p-6">
+            <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-b from-white/[0.04] to-transparent pointer-events-none" />
+            <div className="relative overflow-hidden rounded-2xl max-h-[280px] sm:max-h-[340px] md:max-h-[400px] lg:max-h-[440px]">
+              <Image
+                src="/images/hero-dashboard.webp"
+                alt="Fastik dashboard"
+                className="relative w-full rounded-2xl"
+                width={1200}
+                height={400}
+                sizes="(max-width: 640px) 100vw, 1200px"
+                loading="lazy"
+              />
+            </div>
+          </div>
+          <div className="absolute -bottom-8 left-0 right-0 h-40 bg-gradient-to-t from-[#09090b] via-[#09090b]/80 to-transparent pointer-events-none z-10" />
+        </div>
       </section>
-
-      {/* ── 3D DEVICE THEATER · scroll opens the laptop, integrations orbit ── */}
-      <DeviceTheater />
 
       {/* ── PAIN POINTS ── */}
       <FadeSection className="relative py-20 px-6 overflow-hidden">
@@ -904,8 +941,50 @@ export default function Index() {
         </div>
       </FadeSection>
 
-      {/* ── DOWNLOAD / CROSS-PLATFORM CTA ── */}
-      <DownloadSection id="download" />
+      {/* ── COUNTDOWN ── */}
+      <FadeSection className="relative py-20 px-6 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)`,
+            backgroundSize: '80px 80px',
+          }} />
+          <div className="absolute inset-0" style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)`,
+            backgroundSize: '20px 20px',
+          }} />
+          <div className="absolute inset-0" style={{
+            background: 'radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, #09090b 100%)',
+          }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] rounded-full bg-primary/[0.04] blur-[100px]" />
+        </div>
+        <div className="relative max-w-3xl mx-auto text-center">
+          <div className={cn('inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs text-primary/80 mb-6', glass)}>
+            <Clock className="w-3.5 h-3.5" /> Currently Building
+          </div>
+          <h2 className="text-3xl sm:text-5xl md:text-[3.5rem] leading-[0.95]">
+            <span className="text-premium">Launching</span>{' '}<span className="italic font-serif text-sweep">Soon</span>
+          </h2>
+          <p className="mt-3 text-white/40 font-light">We're crafting something special for creatives. Get ready.</p>
+          <div className="mt-8 flex justify-center gap-4 sm:gap-5">
+            {[
+              { val: countdown.days, label: 'Days' },
+              { val: countdown.hours, label: 'Hours' },
+              { val: countdown.minutes, label: 'Minutes' },
+              { val: countdown.seconds, label: 'Seconds' },
+            ].map(t => (
+              <div key={t.label} className="flex flex-col items-center">
+                <div className={cn('w-16 sm:w-20 h-16 sm:h-20 rounded-2xl flex items-center justify-center', glass)}>
+                  <span className="text-2xl sm:text-3xl font-semibold font-mono tabular-nums text-white/90">{String(t.val).padStart(2, '0')}</span>
+                </div>
+                <span className="text-[11px] text-white/30 mt-2.5 font-light">{t.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </FadeSection>
+
+      {/* ── CTA ── */}
+      <WaitlistCTA id="story" />
       </main>
 
       {/* ── FOOTER ── */}

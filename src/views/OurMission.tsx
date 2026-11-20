@@ -7,7 +7,7 @@ import { glass } from "@/lib/constants";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { DownloadSection } from "@/components/shared/DownloadSection";
+import { WaitlistCTA } from "@/components/shared/WaitlistCTA";
 
 const milestones = [
   {
@@ -202,7 +202,7 @@ export default function OurMission() {
       </section>
 
       {/* ── CTA ── */}
-      <DownloadSection />
+      <WaitlistCTA id="mission-cta" />
       </main>
 
       {/* ── FOOTER ── */}

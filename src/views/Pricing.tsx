@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { glass, glassHover } from "@/lib/constants";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { DownloadSection } from "@/components/shared/DownloadSection";
+import { WaitlistCTA } from "@/components/shared/WaitlistCTA";
 import { FadeSection } from "@/components/shared/FadeSection";
 
 const plans = [
@@ -167,7 +167,7 @@ export default function Pricing() {
         </FadeSection>
 
         {/* ── CTA ── */}
-        <DownloadSection />
+        <WaitlistCTA id="pricing-cta" />
       </main>
 
       <Footer />

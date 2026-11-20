@@ -14,21 +14,13 @@ interface NavbarProps {
   ctaTarget?: string;
 }
 
-export function Navbar({ activePage, ctaTarget = "download" }: NavbarProps) {
+export function Navbar({ activePage, ctaTarget = "story" }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [featuresOpen, setFeaturesOpen] = useState(false);
   const router = useRouter();
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // "Download" jumps to the cross-platform CTA on the home page (both store
-  // buttons live there), or routes there from any other page.
-  const handleDownloadNav = () => {
-    setMobileMenuOpen(false);
-    if (window.location.pathname === "/") scrollTo(ctaTarget);
-    else router.push(`/#${ctaTarget}`);
   };
 
   const handleFeaturesNav = () => {
@@ -103,10 +95,10 @@ export function Navbar({ activePage, ctaTarget = "download" }: NavbarProps) {
             </Link>
             <Button
               size="sm"
-              onClick={handleDownloadNav}
+              onClick={() => scrollTo(ctaTarget)}
               className="bg-gradient-to-r from-[#3a118f] to-[#665ed7] hover:from-[#4a1aaf] hover:to-[#7b74e0] text-white rounded-full px-5 text-xs h-8 transition-all duration-300"
             >
-              Download
+              Join Early Access
             </Button>
           </div>
 
@@ -170,10 +162,10 @@ export function Navbar({ activePage, ctaTarget = "download" }: NavbarProps) {
           </Link>
           <div className="pt-4">
             <Button
-              onClick={handleDownloadNav}
+              onClick={() => { setMobileMenuOpen(false); scrollTo(ctaTarget); }}
               className="w-full bg-gradient-to-r from-[#3a118f] to-[#665ed7] hover:from-[#4a1aaf] hover:to-[#7b74e0] text-white rounded-xl h-11 text-sm font-medium transition-all duration-300"
             >
-              Download
+              Join Early Access
             </Button>
           </div>
         </div>

@@ -9,7 +9,7 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { FadeSection } from "@/components/shared/FadeSection";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { DownloadSection } from "@/components/shared/DownloadSection";
+import { WaitlistCTA } from "@/components/shared/WaitlistCTA";
 
 const teamMembers = [
   { name: "Aminu Iradukunda Hassan", role: "Founder & CEO", photo: "/assets/team/Aminu_picture.webp" },
@@ -222,7 +222,7 @@ export default function OurStory() {
       </FadeSection>
 
       {/* ── CTA ── */}
-      <DownloadSection />
+      <WaitlistCTA id="story-cta" />
       </main>
 
       {/* ── FOOTER ── */}

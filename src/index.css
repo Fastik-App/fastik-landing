@@ -137,53 +137,6 @@
   .animated-underline:hover::after {
     width: 100%;
   }
-
-  /* A hairline gradient border, brighter at the top edge for a glass "glint".
-     Drawn as a masked ::before so it sits over rounded, clipped content. */
-  .gradient-frame::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0.02));
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    z-index: 3;
-  }
-
-  /* Violet-tinted multi-layer shadow — an object resting in light, not a black drop. */
-  .app-window-shadow {
-    box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.5),
-      0 12px 24px rgba(0, 0, 0, 0.45),
-      0 48px 96px -32px rgba(102, 94, 215, 0.35);
-  }
-
-  /* Hero reveal: the product un-tilts and settles as it enters. */
-  @keyframes showcase-reveal {
-    from { opacity: 0; transform: translateY(48px) perspective(1600px) rotateX(14deg) scale(0.96); }
-    to   { opacity: 1; transform: none; }
-  }
-  .animate-showcase {
-    animation: showcase-reveal 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .animate-showcase { animation: none; opacity: 1; transform: none; }
-  }
-}
-
-/* Gentle vertical float for the laptop hero + its integration chips. */
-@keyframes fk-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-.fk-float { animation: fk-float 9s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) {
-  .fk-float { animation: none; }
 }
 
 /* Scrollbar */
