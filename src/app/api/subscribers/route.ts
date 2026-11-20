@@ -83,9 +83,13 @@ export async function POST(request: Request) {
       from,
       to: email,
       ...(replyTo ? { replyTo } : {}),
+      // Sending "to a topic" is what makes Resend expand
+      // {{{RESEND_UNSUBSCRIBE_URL}}} and honour opt-outs. Without it the
+      // placeholder is delivered literally and the unsubscribe link is dead —
+      // which is exactly what happened on the first send.
+      ...(topicId ? { topicId } : {}),
       subject: WAITLIST_SUBJECT,
       html: waitlistWelcomeHtml(siteUrl),
-      headers: { "List-Unsubscribe": "<{{{RESEND_UNSUBSCRIBE_URL}}}>" },
     });
     if (error) console.error("[subscribers] welcome email failed", error);
   } catch (err) {
