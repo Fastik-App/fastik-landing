@@ -26,6 +26,9 @@ export async function POST(request: Request) {
   const apiKey = process.env.RESEND_API_KEY;
   const audienceId = process.env.RESEND_AUDIENCE_ID;
   const from = process.env.WAITLIST_FROM_EMAIL;
+  // Where replies land. Kept in env rather than in source because this repo
+  // is public and it is a personal inbox.
+  const replyTo = process.env.WAITLIST_REPLY_TO;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fastik.io";
 
   if (!apiKey || !audienceId || !from) {
@@ -74,6 +77,7 @@ export async function POST(request: Request) {
     const { error } = await resend.emails.send({
       from,
       to: email,
+      ...(replyTo ? { replyTo } : {}),
       subject: WAITLIST_SUBJECT,
       html: waitlistWelcomeHtml(siteUrl),
       headers: { "List-Unsubscribe": "<{{{RESEND_UNSUBSCRIBE_URL}}}>" },
