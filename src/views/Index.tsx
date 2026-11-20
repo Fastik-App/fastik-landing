@@ -9,6 +9,7 @@ import { FadeSection } from "@/components/shared/FadeSection";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { WaitlistCTA } from "@/components/shared/WaitlistCTA";
+import { HeroVideo } from "@/components/shared/HeroVideo";
 
 const roles = [
   { icon: Video, label: 'Videographers' },
@@ -763,16 +764,8 @@ export default function Index() {
           <div className="absolute -inset-10 bg-gradient-to-b from-primary/20 via-primary/10 to-transparent rounded-[2.5rem] blur-[60px] pointer-events-none" />
           <div className="relative rounded-[2rem] border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm p-4 sm:p-6">
             <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-b from-white/[0.04] to-transparent pointer-events-none" />
-            <div className="relative overflow-hidden rounded-2xl max-h-[280px] sm:max-h-[340px] md:max-h-[400px] lg:max-h-[440px]">
-              <Image
-                src="/images/hero-dashboard.webp"
-                alt="Fastik dashboard"
-                className="relative w-full rounded-2xl"
-                width={1200}
-                height={400}
-                sizes="(max-width: 640px) 100vw, 1200px"
-                loading="lazy"
-              />
+            <div className="relative overflow-hidden rounded-2xl h-[280px] sm:h-[340px] md:h-[400px] lg:h-[440px]">
+              <HeroVideo className="absolute inset-0 rounded-2xl overflow-hidden" />
             </div>
           </div>
           <div className="absolute -bottom-8 left-0 right-0 h-40 bg-gradient-to-t from-[#09090b] via-[#09090b]/80 to-transparent pointer-events-none z-10" />
