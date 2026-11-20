@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { WAITLIST_SUBJECT, waitlistWelcomeHtml } from "@/lib/waitlist-email";
+import { unsubscribeUrl } from "@/lib/unsubscribe-token";
 
 /**
  * Waitlist signup.
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
   // is public and it is a personal inbox.
   const replyTo = process.env.WAITLIST_REPLY_TO;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fastik.io";
+  const unsubSecret = process.env.UNSUBSCRIBE_SECRET;
 
   if (!apiKey || !from) {
     // Misconfiguration is ours, not the visitor's — don't blame their input.
@@ -79,17 +81,24 @@ export async function POST(request: Request) {
   // The address is on the list at this point. A failed welcome email is worth
   // logging but not worth telling the visitor they failed to sign up.
   try {
+    const unsubUrl = unsubSecret ? unsubscribeUrl(siteUrl, email, unsubSecret) : `${siteUrl}/unsubscribe`;
     const { error } = await resend.emails.send({
       from,
       to: email,
       ...(replyTo ? { replyTo } : {}),
-      // Sending "to a topic" is what makes Resend expand
-      // {{{RESEND_UNSUBSCRIBE_URL}}} and honour opt-outs. Without it the
-      // placeholder is delivered literally and the unsubscribe link is dead —
-      // which is exactly what happened on the first send.
+      // Gating, not templating: Resend refuses the send if this contact has
+      // opted out of the topic. It does NOT expand the unsubscribe
+      // placeholder — that is Broadcasts/Automations only, which is why the
+      // link below is one we mint and host ourselves.
       ...(topicId ? { topicId } : {}),
       subject: WAITLIST_SUBJECT,
-      html: waitlistWelcomeHtml(siteUrl),
+      html: waitlistWelcomeHtml(siteUrl, unsubUrl),
+      // RFC 8058 one-click. Gmail and Outlook render their own unsubscribe
+      // button from these, which is the part that helps deliverability.
+      headers: {
+        "List-Unsubscribe": `<${unsubUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     });
     if (error) console.error("[subscribers] welcome email failed", error);
   } catch (err) {

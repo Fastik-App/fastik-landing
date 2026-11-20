@@ -6,13 +6,17 @@
  * built from SITE_URL rather than hardcoded (it pointed at an apex that was
  * dead until recently), and an unsubscribe line was added — the Terms page
  * promises one, and bulk mail legally needs it.
+ *
+ * The unsubscribe URL is passed in rather than using Resend's
+ * {{{RESEND_UNSUBSCRIBE_URL}}} placeholder: that only expands in Broadcasts
+ * and Automations, and the send API delivers it as literal text.
  */
 
 const BRAND = "#7c6eff";
 
 export const WAITLIST_SUBJECT = "You're in! Welcome to Fastik";
 
-export function waitlistWelcomeHtml(siteUrl: string): string {
+export function waitlistWelcomeHtml(siteUrl: string, unsubUrl: string): string {
   const site = siteUrl.replace(/\/$/, "");
   return `<!DOCTYPE html>
 <html lang="en">
@@ -61,7 +65,7 @@ export function waitlistWelcomeHtml(siteUrl: string): string {
               <td align="center" style="padding-top:48px;">
                 <p style="color:#52525b;font-size:12px;line-height:1.6;margin:0;">
                   You're receiving this because you joined the Fastik waitlist.<br/>
-                  <a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:#71717a;">Unsubscribe</a>
+                  <a href="${unsubUrl}" style="color:#71717a;">Unsubscribe</a>
                 </p>
               </td>
             </tr>
